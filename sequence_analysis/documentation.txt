@@ -34,23 +34,28 @@ The script takes a while to run if the original file is large, so go grab a coff
 
 
 4_translator.py
-
 The heart of the transcription. Still working on it.
+It currently performs the following checks:
+- EOL symbol occurs only once
+- EOL symbol occurs at the end
+- No consecutive signals of the same type
+- No undetected symbols
 It outputs a CSV file containing the following information: 
 - Sequence number, it's a progressive number in the recording
 - Signal Type, the letter associated with each symbol, uses Seventh Circle's convention, the last symbol is called X.
-- Time (s), relative to the lower left corener of each symbol*
+- Time (s), relative to the lower left corner of each symbol*
 - Frequency (Hz), relative to the lower left corener of each symbol*
 - Correlation Value, it represents the correlation value between the reference "block" symbols and those found in the spectrogram.
   For tone signals, this is current a metric of the measured signal length vs average one. 
 
-* I use the "block element" for symbols E and EOL (called X in the CSV file), symbol D is referenced somewhere in the bottom part because it often extends into the noise.
+* Symbol D is referenced near the bottom part because it often extends into the low frequency noise.
   Perhaps a better reference could be the top left corner of "block" symbols, it could avoid the inability to detect the bottom oxtent of symbol d.
   
 TO DO:
 - Generate output spectrogram with shaded signals + their corresponding symbol
 - Test noise filtering to improve SNR
 - Export, then stack or average signal samples, does it improve correlation?
-- Test more custom FFT windows to improve SNR. I found that a custom Taylor window with less aggresisve sidelobe suppression results in higher resolution and SNR compared to Hann.
-- Make code more flexible with FFTs, it's currently hard-coded for 2048 sample FFTs with 50% overlap
+- Ensure that code is flexible with FFTs of various sizes and with different overlaps
 - Use functions to simplify a few repetitive steps
+- Include signal duration in output (allows calculating time gap during analyses, if needed)
+- Add check for the rule of 7.
