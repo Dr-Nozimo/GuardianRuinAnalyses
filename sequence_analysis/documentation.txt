@@ -11,11 +11,11 @@ Since this step needs to be run only once before archiving, I don't mind waiting
 This Bash script cuts the original audio recording into 25 min segments with 5 min overlap.
 This step is required to make recordings manageable by the following Python script, otherwise the memory requirements are excessive.
 The products are mono* audio files in FLAC format, stored in a directory called tmp_segments. These files can be deleted after the next step.
-Unfortunately, due to how audio is cut by ffmpeg, re-encoding
+Unfortunately, due to how audio is cut by ffmpeg, re-encoding is necessary.
 *mono is sufficient for the next step. The final products will be derived directly from the original recording, preserving stereo.
 
 
-2_sequence-parser.py
+2_sequence-parser.py (still in Jupiter notebook)
 
 This Python script detects the beginning and end of signal sequences, adds 10 s buffers before and after the sequences, and outputs a file with start and end times for each sequence.
 First, the audio file from each segment is loaded and processed with a 2D FFT to generate a spectrogram.
@@ -24,18 +24,21 @@ The audio levels are compared to the background noise, detecting signals when th
 The detection is still noisy, so it needs a bit of filtering. Signal sequences at the beginning and end of an audio segment are discarded because they are incomplete, the 5 min overlap ensures that all sequences are captured.
 Duplicate detections and "short" sequences of noise (e.g., in-game SRV operations) are filtered out.
 The result is a list of start and end times in seconds, stored in a CSV file called sequence_timing.csv
+Warning: sometimes this script breaks if there are discontinuities in the recording. The solution is to fill those breaks with low amplitude white noise.
 
 
 3_sequence-slicer.bash
 
 This Bash script is similar to script 2, but is designed to run in parallel, extracting each sequence of signals from the original audio file to small segments.
-The audio format is FLAC with stereo channels and compression is maximized.
+The audio format is FLAC with stereo channels, compression is maximized.
 The script takes a while to run if the original file is large, so go grab a coffe!
 
 
-4_translator.py
+4_transcribe-parallel.py  (still in Jupiter notebook)
 The heart of the transcription. Still working on it.
-It currently performs the following checks:
+This script takes advantage of parallelization to speed up processing. Make sure you change the number of processes based on your setup.
+This script is sensitive to drops in SNR and sometimes the B signal will be split in two or three. Although rare, a warning is printed every time this occurs, better check.
+It also performs the following checks:
 - EOL symbol occurs only once
 - EOL symbol occurs at the end
 - No consecutive signals of the same type
@@ -53,9 +56,3 @@ It outputs a CSV file containing the following information:
   
 TO DO:
 - Generate output spectrogram with shaded signals + their corresponding symbol
-- Test noise filtering to improve SNR
-- Export, then stack or average signal samples, does it improve correlation?
-- Ensure that code is flexible with FFTs of various sizes and with different overlaps
-- Use functions to simplify a few repetitive steps
-- Include signal duration in output (allows calculating time gap during analyses, if needed)
-- Add check for the rule of 7.
